@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+{% block title %}Contáctanos{% endblock %}
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .contacto-hero {
+    background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 100%);
+    padding: 3.5rem 3rem; position: relative; overflow: hidden;
+  }
+  .contacto-hero::before {
+    content: ''; position: absolute; right: -60px; top: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: rgba(255,255,255,.06);
+  }
+  .contacto-hero::after {
+    content: ''; position: absolute; right: 80px; bottom: -80px;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: rgba(255,255,255,.04);
+  }
+  .hero-txt h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 2.6rem;
+    text-transform: uppercase; color: #fff; line-height: 1;
+  }
+  .hero-txt h1 span { color: #7DFFA8; }
+  .hero-txt p { color: rgba(255,255,255,.8); margin-top: .6rem; font-size: .97rem; }
+  .breadcrumb { color: rgba(255,255,255,.6); font-size: .82rem; margin-top: .4rem; }
+  .breadcrumb a { color: rgba(255,255,255,.6); text-decoration: none; }
+
+  /* ── TARJETAS RÁPIDAS ── */
+  .contact-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 3rem;
+  }
+  .contact-card {
+    background: var(--white); padding: 1.8rem 1.2rem;
+    text-align: center; text-decoration: none; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; gap: .7rem;
+    transition: background .2s;
+  }
+  .contact-card:hover { background: var(--green-lt); }
+  .cc-icon {
+    width: 54px; height: 54px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; background: var(--green-lt);
+    border: 2px solid var(--border);
+    transition: background .2s, border-color .2s;
+  }
+  .contact-card:hover .cc-icon { background: var(--green); border-color: var(--green); }
+  .cc-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: .7rem;
+    font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--muted);
+  }
+  .cc-value { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .95rem; color: var(--green-dk); word-break: break-all; line-height: 1.3; }
+  .cc-action { font-size: .75rem; color: var(--orange); font-weight: 600; }
+  .badge-pronto {
+    display: inline-block; font-family: 'Barlow Condensed', sans-serif;
+    font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    padding: .18rem .55rem; border-radius: 20px;
+    background: rgba(255,125,59,.1); color: var(--orange);
+    border: 1px solid rgba(255,125,59,.3);
+  }
+
+  /* ── LAYOUT ── */
+  .contacto-layout {
+    display: grid; grid-template-columns: 1fr 1.1fr;
+    gap: 3rem; align-items: start;
+  }
+
+  /* ── INFO ── */
+  .info-block { display: flex; flex-direction: column; gap: 1.2rem; }
+  .info-item {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1.2rem 1.4rem; background: var(--off);
+    border: 1.5px solid var(--border); border-radius: 10px;
+    border-left: 4px solid var(--green);
+    transition: box-shadow .2s;
+  }
+  .info-item:hover { box-shadow: 0 4px 16px rgba(61,190,110,.1); }
+  .info-icon {
+    font-size: 1.4rem; flex-shrink: 0;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--green-lt); border-radius: 8px;
+  }
+  .info-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: .7rem;
+    font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--green); margin-bottom: .2rem;
+  }
+  .info-value { font-size: .93rem; color: var(--ink); font-weight: 500; word-break: break-all; }
+  .info-value a { color: var(--ink); text-decoration: none; }
+  .info-value a:hover { color: var(--orange); }
+  .info-note { font-size: .76rem; color: var(--muted); margin-top: .15rem; }
+
+  .wa-block {
+    background: linear-gradient(135deg, #25D366 0%, #1ebe59 100%);
+    border-radius: 12px; padding: 1.6rem;
+    display: flex; align-items: center; gap: 1rem;
+    text-decoration: none; color: #fff;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .wa-block:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(37,211,102,.35); }
+  .wa-block svg { width: 38px; height: 38px; fill: #fff; flex-shrink: 0; }
+  .wa-block-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.15rem; text-transform: uppercase; letter-spacing: .06em; }
+  .wa-block-sub { font-size: .82rem; color: rgba(255,255,255,.85); margin-top: .15rem; }
+
+  /* ── VALORACIÓN ── */
+  .valoracion-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+  }
+  .val-header {
+    background: linear-gradient(135deg, var(--green-dk), var(--green));
+    padding: 1.4rem 1.8rem;
+    display: flex; align-items: center; gap: .8rem;
+  }
+  .val-header-icon { font-size: 1.8rem; }
+  .val-header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 1.2rem;
+    text-transform: uppercase; color: #fff; letter-spacing: .06em;
+  }
+  .val-header-sub { font-size: .8rem; color: rgba(255,255,255,.8); }
+
+  .val-body { padding: 1.8rem; display: flex; flex-direction: column; gap: 1.4rem; }
+
+  /* Estrellas */
+  .stars-group { text-align: center; }
+  .stars-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: .78rem;
+    font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--green-dk); margin-bottom: .8rem;
+  }
+  .stars {
+    display: flex; justify-content: center; gap: .4rem;
+    margin-bottom: .5rem;
+  }
+  .star {
+    font-size: 2.4rem; cursor: pointer;
+    color: #ddd; transition: color .15s, transform .15s;
+    user-select: none; line-height: 1;
+  }
+  .star:hover,
+  .star.hover,
+  .star.selected { color: #F5A623; transform: scale(1.15); }
+  .stars-texto {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .85rem; font-weight: 600;
+    color: var(--muted); min-height: 1.2rem;
+    transition: color .2s;
+  }
+  .stars-texto.activo { color: #F5A623; }
+
+  /* Nombre */
+  .fg { display: flex; flex-direction: column; gap: .35rem; }
+  .fl {
+    font-family: 'Barlow Condensed', sans-serif; font-size: .75rem;
+    font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--green-dk);
+  }
+  .fc {
+    background: var(--off); border: 1.5px solid var(--border);
+    color: var(--ink); padding: .8rem 1rem;
+    font-family: 'Barlow', sans-serif; font-size: .95rem;
+    outline: none; border-radius: 8px;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .fc:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(61,190,110,.12); background: var(--white); }
+  .fc::placeholder { color: #aac5b5; }
+  textarea.fc { resize: vertical; min-height: 100px; }
+
+  .btn-enviar {
+    background: var(--orange); color: #fff;
+    border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 1.05rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: 1rem 2rem; border-radius: 8px; width: 100%;
+    transition: background .25s, transform .2s;
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+  }
+  .btn-enviar:hover { background: #ff6a22; transform: translateY(-2px); }
+
+  .val-ok {
+    display: none; text-align: center;
+    background: var(--green-lt); border: 1.5px solid var(--green);
+    border-radius: 8px; padding: 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; color: var(--green-dk); font-size: 1rem;
+  }
+
+  /* Reseñas recientes */
+  .resenas-titulo {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 1rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--green-dk); padding-top: .4rem;
+    border-top: 1px solid var(--border);
+  }
+  .resena-list { display: flex; flex-direction: column; gap: .8rem; margin-top: .8rem; }
+  .resena-item {
+    background: var(--off); border-radius: 8px;
+    padding: .9rem 1rem; border-left: 3px solid var(--green);
+  }
+  .resena-stars { color: #F5A623; font-size: 1rem; letter-spacing: .05rem; }
+  .resena-texto { font-size: .88rem; color: var(--ink); margin-top: .3rem; line-height: 1.5; }
+  .resena-autor { font-size: .75rem; color: var(--muted); margin-top: .3rem; font-weight: 600; }
+
+  @media(max-width:900px){
+    .contact-cards { grid-template-columns: 1fr 1fr; }
+    .contacto-layout { grid-template-columns: 1fr; }
+    .contacto-hero { padding: 2.5rem 1.5rem; }
+  }
+  @media(max-width:600px){
+    .contact-cards { grid-template-columns: 1fr; }
+    .star { font-size: 2rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="contacto-hero">
+  <div class="hero-txt">
+    <h1>Contáctanos <span>Hoy</span></h1>
+    <p>Estamos listos para atenderte. Escríbenos, llámanos o déjanos tu opinión.</p>
+    <div class="breadcrumb"><a href="{{ url_for('inicio') }}">Inicio</a> › Contáctanos</div>
+  </div>
+</div>
+
+<!-- TARJETAS RÁPIDAS -->
+<div class="section" style="padding-bottom:0;">
+  <div class="contact-cards">
+    <a href="tel:+51999999999" class="contact-card">
+      <div class="cc-icon">📞</div>
+      <div class="cc-label">Teléfono</div>
+      <div class="cc-value">+51 999 999 999</div>
+      <div class="cc-action">Llamar ahora →</div>
+    </a>
+    <a href="mailto:corporacionlogisticahr.2025@gmail.com" class="contact-card">
+      <div class="cc-icon">✉️</div>
+      <div class="cc-label">Correo</div>
+      <div class="cc-value">corporacionlogisticahr.2025@gmail.com</div>
+      <div class="cc-action">Enviar correo →</div>
+    </a>
+    <a href="https://wa.me/51999999999?text=Hola%2C%20quiero%20cotizar%20cascarilla%20de%20arroz" target="_blank" class="contact-card">
+      <div class="cc-icon">💬</div>
+      <div class="cc-label">WhatsApp</div>
+      <div class="cc-value">+51 999 999 999</div>
+      <div class="cc-action">Escribir ahora →</div>
+    </a>
+    <a href="#" class="contact-card" id="fb-card">
+      <div class="cc-icon">📘</div>
+      <div class="cc-label">Facebook</div>
+      <div class="cc-value">Corporación Logística H&R</div>
+      <div class="cc-action"><span class="badge-pronto">Próximamente</span></div>
+    </a>
+  </div>
+</div>
+
+<!-- LAYOUT PRINCIPAL -->
+<div class="section" style="padding-top:2rem;">
+  <div class="contacto-layout">
+
+    <!-- INFO -->
+    <div class="info-block">
+      <div class="info-item">
+        <div class="info-icon">📍</div>
+        <div>
+          <div class="info-label">Ubicación</div>
+          <div class="info-value">Vegueta, Km 168 — Huacho, Lima</div>
+          <div class="info-note">Centro de distribución principal</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📞</div>
+        <div>
+          <div class="info-label">Teléfono</div>
+          <div class="info-value"><a href="tel:+51999999999">+51 999 999 999</a></div>
+          <div class="info-note">Lunes a sábado · 8am – 6pm</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">✉️</div>
+        <div>
+          <div class="info-label">Correo electrónico</div>
+          <div class="info-value"><a href="mailto:corporacionlogisticahr.2025@gmail.com">corporacionlogisticahr.2025@gmail.com</a></div>
+          <div class="info-note">Respondemos en menos de 24 horas</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">📘</div>
+        <div>
+          <div class="info-label">Facebook <span class="badge-pronto">próximamente</span></div>
+          <div class="info-value" style="color:var(--muted);">Corporación Logística H&R</div>
+          <div class="info-note">Añadiremos el enlace pronto</div>
+        </div>
+      </div>
+      <div class="info-item">
+        <div class="info-icon">🚛</div>
+        <div>
+          <div class="info-label">Cobertura</div>
+          <div class="info-value">Costa norte y sur del Perú</div>
+          <div class="info-note">Flete calculado desde Vegueta, Huacho</div>
+        </div>
+      </div>
+      <a class="wa-block" href="https://wa.me/51999999999?text=Hola%2C%20quiero%20cotizar%20cascarilla%20de%20arroz" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <div>
+          <div class="wa-block-title">Escribir por WhatsApp</div>
+          <div class="wa-block-sub">Respuesta rápida · Cotiza en minutos</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- VALORACIÓN -->
+    <div class="valoracion-card">
+      <div class="val-header">
+        <div class="val-header-icon">⭐</div>
+        <div>
+          <div class="val-header-title">Déjanos tu opinión</div>
+          <div class="val-header-sub">Tu comentario nos ayuda a mejorar</div>
+        </div>
+      </div>
+      <div class="val-body">
+
+        <!-- Estrellas -->
+        <div class="stars-group">
+          <div class="stars-label">¿Cómo calificarías nuestro servicio?</div>
+          <div class="stars" id="stars">
+            <span class="star" data-val="1" onclick="selStar(1)" onmouseover="hoverStar(1)" onmouseout="resetHover()">★</span>
+            <span class="star" data-val="2" onclick="selStar(2)" onmouseover="hoverStar(2)" onmouseout="resetHover()">★</span>
+            <span class="star" data-val="3" onclick="selStar(3)" onmouseover="hoverStar(3)" onmouseout="resetHover()">★</span>
+            <span class="star" data-val="4" onclick="selStar(4)" onmouseover="hoverStar(4)" onmouseout="resetHover()">★</span>
+            <span class="star" data-val="5" onclick="selStar(5)" onmouseover="hoverStar(5)" onmouseout="resetHover()">★</span>
+          </div>
+          <div class="stars-texto" id="stars-texto">Selecciona una puntuación</div>
+        </div>
+
+        <!-- Nombre -->
+        <div class="fg">
+          <label class="fl">Tu nombre (opcional)</label>
+          <input class="fc" type="text" placeholder="Ej: Juan Pérez" id="v-nombre" />
+        </div>
+
+        <!-- Comentario -->
+        <div class="fg">
+          <label class="fl">Tu comentario</label>
+          <textarea class="fc" placeholder="Cuéntanos tu experiencia con nuestro producto o servicio…" id="v-comentario"></textarea>
+        </div>
+
+        <button class="btn-enviar" onclick="enviarValoracion()">
+          ⭐ Enviar valoración
+        </button>
+
+        <div class="val-ok" id="val-ok">
+          ✅ ¡Gracias por tu opinión! La valoramos mucho.
+        </div>
+
+        <!-- Reseñas recientes -->
+        <div class="resenas-titulo">💬 Opiniones de clientes</div>
+        <div class="resena-list" id="resena-list">
+          <div class="resena-item">
+            <div class="resena-stars">★★★★★</div>
+            <div class="resena-texto">Excelente producto, la cascarilla llegó en perfectas condiciones. Mis pollos están mucho más cómodos y la cama dura bastante más que otros materiales.</div>
+            <div class="resena-autor">— Carlos M., Avicultor · Barranca</div>
+          </div>
+          <div class="resena-item">
+            <div class="resena-stars">★★★★★</div>
+            <div class="resena-texto">Muy buena atención y entrega rápida. El precio es justo y el flete al norte fue razonable. Lo recomiendo para cultivos de arándano.</div>
+            <div class="resena-autor">— Agrícola Flores · Ica</div>
+          </div>
+          <div class="resena-item">
+            <div class="resena-stars">★★★★☆</div>
+            <div class="resena-texto">Buen producto y servicio puntual. La cascarilla es de buena calidad, sin impurezas. Seguiré comprando con ellos.</div>
+            <div class="resena-autor">— Roberto V. · Huacho</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const TEXTOS = ['', 'Muy malo 😞', 'Malo 😕', 'Regular 😐', 'Bueno 😊', 'Excelente 🌟'];
+  let starSel = 0;
+
+  function hoverStar(n) {
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.classList.toggle('hover', i < n);
+    });
+    const txt = document.getElementById('stars-texto');
+    txt.textContent = TEXTOS[n];
+    txt.classList.add('activo');
+  }
+
+  function resetHover() {
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('hover'));
+    const txt = document.getElementById('stars-texto');
+    txt.textContent = starSel ? TEXTOS[starSel] : 'Selecciona una puntuación';
+    if (!starSel) txt.classList.remove('activo');
+  }
+
+  function selStar(n) {
+    starSel = n;
+    document.querySelectorAll('.star').forEach((s, i) => {
+      s.classList.toggle('selected', i < n);
+    });
+    const txt = document.getElementById('stars-texto');
+    txt.textContent = TEXTOS[n];
+    txt.classList.add('activo');
+  }
+
+  function enviarValoracion() {
+    if (!starSel) { alert('Por favor selecciona una puntuación.'); return; }
+    const nombre     = document.getElementById('v-nombre').value.trim();
+    const comentario = document.getElementById('v-comentario').value.trim();
+    if (!comentario) { alert('Por favor escribe un comentario.'); return; }
+
+    // Agregar reseña a la lista
+    const estrellas = '★'.repeat(starSel) + '☆'.repeat(5 - starSel);
+    const autor = nombre ? `— ${nombre}` : '— Cliente anónimo';
+    const item = document.createElement('div');
+    item.className = 'resena-item';
+    item.innerHTML = `
+      <div class="resena-stars">${estrellas}</div>
+      <div class="resena-texto">${comentario}</div>
+      <div class="resena-autor">${autor}</div>
+    `;
+    // Insertar al inicio
+    const lista = document.getElementById('resena-list');
+    lista.insertBefore(item, lista.firstChild);
+
+    // Mostrar confirmación
+    document.getElementById('val-ok').style.display = 'block';
+    setTimeout(() => document.getElementById('val-ok').style.display = 'none', 4000);
+
+    // Limpiar
+    document.getElementById('v-nombre').value = '';
+    document.getElementById('v-comentario').value = '';
+    starSel = 0;
+    document.querySelectorAll('.star').forEach(s => s.classList.remove('selected'));
+    document.getElementById('stars-texto').textContent = 'Selecciona una puntuación';
+    document.getElementById('stars-texto').classList.remove('activo');
+  }
+</script>
+{% endblock %}

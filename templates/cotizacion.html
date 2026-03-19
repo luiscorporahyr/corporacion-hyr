@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% block title %}Cotización{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  /* ── PASOS ── */
+  .pasos {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 2.5rem; background: var(--off);
+    border: 1.5px solid var(--border); border-radius: 10px;
+    overflow: hidden;
+  }
+  .paso {
+    flex: 1; display: flex; align-items: center; gap: .7rem;
+    padding: 1rem 1.4rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .85rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); border-right: 1px solid var(--border);
+    transition: background .2s, color .2s;
+  }
+  .paso:last-child { border-right: none; }
+  .paso.activo { background: var(--green-lt); color: var(--green-dk); }
+  .paso.completado { background: var(--green); color: #fff; }
+  .paso-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--border); color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 900; flex-shrink: 0;
+    transition: background .2s, color .2s;
+  }
+  .paso.activo .paso-num { background: var(--green); color: #fff; }
+  .paso.completado .paso-num { background: #fff; color: var(--green-dk); }
+
+  /* ── SELECTOR DE USO ── */
+  .uso-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem; margin-top: 1.5rem;
+  }
+  .uso-card {
+    border: 2px solid var(--border); border-radius: 12px;
+    padding: 1.4rem 1.2rem; text-align: center;
+    cursor: pointer; background: var(--white);
+    transition: border-color .2s, background .2s, transform .2s, box-shadow .2s;
+    user-select: none;
+  }
+  .uso-card:hover {
+    border-color: var(--green);
+    background: var(--green-lt);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(61,190,110,.12);
+  }
+  .uso-card.selected {
+    border-color: var(--green);
+    background: var(--green-lt);
+    box-shadow: 0 0 0 3px rgba(61,190,110,.2);
+  }
+  .uso-card.selected .uso-check { display: flex; }
+  .uso-icon { font-size: 2.2rem; margin-bottom: .6rem; display: block; }
+  .uso-nombre {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--green-dk);
+  }
+  .uso-desc { font-size: .78rem; color: var(--muted); margin-top: .3rem; line-height: 1.4; }
+  .uso-check {
+    display: none; width: 22px; height: 22px;
+    background: var(--green); border-radius: 50%;
+    align-items: center; justify-content: center;
+    color: #fff; font-size: .8rem; font-weight: 900;
+    margin: .6rem auto 0;
+  }
+
+  .btn-siguiente {
+    display: none; margin-top: 1.5rem;
+    background: var(--green); color: #fff;
+    border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 1.05rem;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .9rem 2.4rem; border-radius: 8px;
+    transition: background .2s, transform .2s;
+    align-items: center; gap: .5rem;
+  }
+  .btn-siguiente.visible { display: flex; }
+  .btn-siguiente:hover { background: var(--green-dk); transform: translateY(-2px); }
+
+  /* ── COTIZADOR CON MAPA ── */
+  #paso-mapa { display: none; }
+  #paso-mapa.visible { display: block; }
+
+  .uso-seleccionado-badge {
+    display: inline-flex; align-items: center; gap: .6rem;
+    background: var(--green-lt); border: 1.5px solid var(--green);
+    border-radius: 8px; padding: .6rem 1.2rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .85rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--green-dk); margin-bottom: 1.5rem;
+    cursor: pointer;
+  }
+  .uso-seleccionado-badge span { color: var(--muted); font-weight: 400; font-size: .78rem; text-transform: none; letter-spacing: 0; }
+
+  .cotizador-layout {
+    display: grid; grid-template-columns: 1.2fr 1fr;
+    gap: 2rem; align-items: start;
+  }
+  .mapa-box { border-radius: 10px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 4px 20px rgba(61,190,110,.1); }
+  .mapa-instruccion { background: var(--green); color: #fff; padding: .7rem 1.2rem; font-family: 'Barlow Condensed', sans-serif; font-size: .85rem; font-weight: 600; letter-spacing: .06em; }
+  #map { height: 400px; }
+
+  .panel { display: flex; flex-direction: column; gap: 1rem; }
+  .zona-badge { display:none; padding: 1rem 1.4rem; border-radius: 10px; border-left: 4px solid var(--green); background: var(--green-lt); }
+  .zona-badge.vis { display: block; }
+  .zona-nombre { font-family:'Barlow Condensed',sans-serif; font-size:.75rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--green); margin-bottom:.3rem; }
+  .zona-distancia { font-size:.92rem; color:var(--muted); }
+
+  .qty-row { display:flex; align-items:center; gap:1rem; background:var(--white); border:1.5px solid var(--border); border-radius:10px; padding:1rem 1.4rem; }
+  .qty-label { font-family:'Barlow Condensed',sans-serif; font-size:.8rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--green-dk); flex:1; }
+  .qty-btn { width:34px; height:34px; border-radius:50%; border:2px solid var(--green); background:transparent; color:var(--green); font-size:1.3rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s,color .2s; line-height:1; }
+  .qty-btn:hover { background:var(--green); color:#fff; }
+  .qty-num { font-family:'Barlow Condensed',sans-serif; font-size:1.6rem; font-weight:900; color:var(--ink); min-width:36px; text-align:center; }
+
+  .resultado { display:none; background:var(--white); border:2px solid var(--border); border-radius:12px; overflow:hidden; }
+  .resultado.vis { display:block; }
+  .res-header { background:linear-gradient(135deg, var(--green-dk), var(--green)); padding:.9rem 1.4rem; font-family:'Barlow Condensed',sans-serif; font-size:.78rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#fff; }
+  .res-filas { padding:1rem 1.4rem; display:flex; flex-direction:column; gap:.6rem; }
+  .res-fila { display:flex; justify-content:space-between; align-items:center; padding-bottom:.6rem; border-bottom:1px solid var(--border); font-size:.9rem; }
+  .res-fila:last-child { border-bottom:none; }
+  .fila-lbl { color:var(--muted); }
+  .fila-val { font-family:'Barlow Condensed',sans-serif; font-weight:700; color:var(--ink); }
+  .res-total { background:var(--green-lt); padding:1rem 1.4rem; display:flex; justify-content:space-between; align-items:center; border-top:2px solid var(--green); }
+  .total-lbl { font-family:'Barlow Condensed',sans-serif; font-size:.85rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--green-dk); }
+  .total-val { font-family:'Barlow Condensed',sans-serif; font-size:1.9rem; font-weight:900; color:var(--green-dk); }
+
+  .btn-wa { display:none; width:100%; background:#25D366; color:#fff; border:none; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:1.05rem; letter-spacing:.08em; text-transform:uppercase; padding:1rem; border-radius:8px; transition:background .25s,transform .2s; align-items:center; justify-content:center; gap:.6rem; }
+  .btn-wa.vis { display:flex; }
+  .btn-wa:hover { background:#1ebe59; transform:translateY(-2px); }
+  .btn-wa svg { width:20px; height:20px; fill:#fff; }
+
+  .nota { font-size:.78rem; color:var(--muted); line-height:1.5; }
+
+  @media(max-width:900px){
+    .uso-grid { grid-template-columns: 1fr 1fr; }
+    .cotizador-layout { grid-template-columns: 1fr; }
+    .pasos { flex-direction: column; }
+    .paso { border-right: none; border-bottom: 1px solid var(--border); width: 100%; }
+    .paso:last-child { border-bottom: none; }
+  }
+  @media(max-width:600px){ .uso-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Cotizador <span>Interactivo</span></h1>
+  <div class="breadcrumb"><a href="{{ url_for('inicio') }}">Inicio</a> › Cotización</div>
+</div>
+
+<div class="section">
+
+  <!-- PASOS -->
+  <div class="pasos">
+    <div class="paso activo" id="paso-ind-1">
+      <div class="paso-num">1</div> Selecciona tu uso
+    </div>
+    <div class="paso" id="paso-ind-2">
+      <div class="paso-num">2</div> Ubícate en el mapa
+    </div>
+    <div class="paso" id="paso-ind-3">
+      <div class="paso-num">3</div> Obtén tu cotización
+    </div>
+  </div>
+
+  <!-- PASO 1: SELECTOR DE USO -->
+  <div id="paso-uso">
+    <div class="section-title">¿Para qué <span>necesitas</span> la cascarilla?</div>
+    <div class="section-line"></div>
+    <p class="section-intro">Selecciona el uso principal. Esto nos ayuda a darte la mejor recomendación junto con tu cotización.</p>
+
+    <div class="uso-grid">
+      <div class="uso-card" onclick="seleccionarUso(this, 'Cama para Pollos / Aves', '🐔')">
+        <span class="uso-icon">🐔</span>
+        <div class="uso-nombre">Cama para Pollos / Aves</div>
+        <div class="uso-desc">Galpones avícolas, pollos de engorde, gallinas</div>
+        <div class="uso-check">✓</div>
+      </div>
+      <div class="uso-card" onclick="seleccionarUso(this, 'Cama para Cerdos', '🐷')">
+        <span class="uso-icon">🐷</span>
+        <div class="uso-nombre">Cama para Cerdos</div>
+        <div class="uso-desc">Granjas porcinas, crianza tecnificada</div>
+        <div class="uso-check">✓</div>
+      </div>
+      <div class="uso-card" onclick="seleccionarUso(this, 'Nidos de Gallinas', '🥚')">
+        <span class="uso-icon">🥚</span>
+        <div class="uso-nombre">Nidos de Gallinas</div>
+        <div class="uso-desc">Nidales para gallinas ponedoras</div>
+        <div class="uso-check">✓</div>
+      </div>
+      <div class="uso-card" onclick="seleccionarUso(this, 'Sustrato para Arándano', '🫐')">
+        <span class="uso-icon">🫐</span>
+        <div class="uso-nombre">Sustrato para Arándano</div>
+        <div class="uso-desc">Berries, cultivos en costa peruana</div>
+        <div class="uso-check">✓</div>
+      </div>
+      <div class="uso-card" onclick="seleccionarUso(this, 'Hidroponía', '🌱')">
+        <span class="uso-icon">🌱</span>
+        <div class="uso-nombre">Hidroponía</div>
+        <div class="uso-desc">Sustratos mixtos, invernaderos, tomate, pimiento</div>
+        <div class="uso-check">✓</div>
+      </div>
+      <div class="uso-card" onclick="seleccionarUso(this, 'Biomasa / Energía', '🔥')">
+        <span class="uso-icon">🔥</span>
+        <div class="uso-nombre">Biomasa / Energía</div>
+        <div class="uso-desc">Calderas industriales, combustible renovable</div>
+        <div class="uso-check">✓</div>
+      </div>
+    </div>
+
+    <button class="btn-siguiente" id="btn-siguiente" onclick="irAlMapa()">
+      Continuar al mapa →
+    </button>
+  </div>
+
+  <!-- PASO 2 y 3: MAPA + COTIZADOR -->
+  <div id="paso-mapa">
+
+    <div class="uso-seleccionado-badge" onclick="cambiarUso()">
+      <span id="badge-icon">🐔</span>
+      <div>
+        <div id="badge-uso">Cama para Pollos / Aves</div>
+        <span>Toca para cambiar el uso</span>
+      </div>
+    </div>
+
+    <div class="cotizador-layout">
+      <div>
+        <div class="mapa-box">
+          <div class="mapa-instruccion">📍 Haz clic en el mapa sobre tu ubicación o centro de producción</div>
+          <div id="map"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="zona-badge" id="zona-badge">
+          <div class="zona-nombre" id="zona-nombre">—</div>
+          <div class="zona-distancia" id="zona-dist">—</div>
+        </div>
+
+        <div class="qty-row">
+          <div class="qty-label">Cantidad</div>
+          <button class="qty-btn" onclick="cambiarQty(-1)">−</button>
+          <div class="qty-num" id="qty-num">1</div>
+          <span style="font-size:.8rem;color:var(--muted);">tonelada(s)</span>
+          <button class="qty-btn" onclick="cambiarQty(1)">+</button>
+        </div>
+
+        <div class="resultado" id="resultado">
+          <div class="res-header">📋 Desglose de cotización</div>
+          <div class="res-filas">
+            <div class="res-fila">
+              <span class="fila-lbl">Uso seleccionado</span>
+              <span class="fila-val" id="r-uso">—</span>
+            </div>
+            <div class="res-fila">
+              <span class="fila-lbl">Producto (cascarilla)</span>
+              <span class="fila-val" id="r-prod">—</span>
+            </div>
+            <div class="res-fila">
+              <span class="fila-lbl">Flete (<span id="r-zona-lbl">—</span>)</span>
+              <span class="fila-val" id="r-flete">—</span>
+            </div>
+            <div class="res-fila">
+              <span class="fila-lbl">Cantidad</span>
+              <span class="fila-val" id="r-qty">—</span>
+            </div>
+          </div>
+          <div class="res-total">
+            <span class="total-lbl">Total estimado</span>
+            <span class="total-val" id="r-total">—</span>
+          </div>
+        </div>
+
+        <button class="btn-wa" id="btn-wa" onclick="enviarWA()">
+          <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar cotización por WhatsApp
+        </button>
+
+        <p class="nota">* Precios referenciales en soles (S/.). Producto: S/. 350/ton. Flete desde Vegueta, Huacho. Cotización final sujeta a confirmación.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ── Estado global ──
+  let usoSeleccionado = null;
+  let usoIcono = null;
+  let qty = 1;
+  let clienteLoc = null;
+  let marcador = null;
+  let zona = null;
+
+  // ── Selector de uso ──
+  function seleccionarUso(card, nombre, icono) {
+    document.querySelectorAll('.uso-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    usoSeleccionado = nombre;
+    usoIcono = icono;
+    const btn = document.getElementById('btn-siguiente');
+    btn.classList.add('visible');
+    // Actualizar pasos
+    document.getElementById('paso-ind-1').classList.add('completado');
+    document.getElementById('paso-ind-1').classList.remove('activo');
+  }
+
+  function irAlMapa() {
+    document.getElementById('paso-uso').style.display = 'none';
+    document.getElementById('paso-mapa').classList.add('visible');
+    document.getElementById('badge-uso').textContent = usoSeleccionado;
+    document.getElementById('badge-icon').textContent = usoIcono;
+    document.getElementById('r-uso').textContent = usoSeleccionado;
+    document.getElementById('paso-ind-2').classList.add('activo');
+    // Iniciar mapa
+    setTimeout(iniciarMapa, 100);
+  }
+
+  function cambiarUso() {
+    document.getElementById('paso-uso').style.display = 'block';
+    document.getElementById('paso-mapa').classList.remove('visible');
+    document.getElementById('paso-ind-1').classList.remove('completado');
+    document.getElementById('paso-ind-1').classList.add('activo');
+    document.getElementById('paso-ind-2').classList.remove('activo');
+  }
+
+  // ── Mapa Leaflet ──
+  const CENTRO = { lat: -11.0175, lng: -77.6470 };
+  const PRECIO = 350;
+  const ZONAS = [
+    { nombre:'Zona Centro', max:10,   flete:100,  color:'#3DBE6E', desc:'Huacho y alrededores (0–10 km)' },
+    { nombre:'Zona 1',      max:50,   flete:150,  color:'#7EC850', desc:'Barranca, Supe, Pativilca (10–50 km)' },
+    { nombre:'Zona 2',      max:150,  flete:220,  color:'#F5A623', desc:'Lima Norte/Sur (50–150 km)' },
+    { nombre:'Zona 3',      max:300,  flete:300,  color:'#E8774A', desc:'Costa central (150–300 km)' },
+    { nombre:'Zona 4',      max:9999, flete:null, color:'#C0392B', desc:'Más de 300 km — cotización especial' },
+  ];
+
+  let mapIniciado = false;
+  let map;
+
+  function iniciarMapa() {
+    if (mapIniciado) return;
+    mapIniciado = true;
+
+    map = L.map('map').setView([CENTRO.lat, CENTRO.lng], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:18 }).addTo(map);
+
+    const icCentro = L.divIcon({ html:'<div style="background:#27925A;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">📦 Vegueta — H&R</div>', className:'', iconAnchor:[55,12] });
+    L.marker([CENTRO.lat, CENTRO.lng], { icon:icCentro }).addTo(map);
+
+    const co = { fill:true, stroke:true, weight:1.5, dashArray:'6,4' };
+    L.circle([CENTRO.lat,CENTRO.lng],{...co,radius:10000, color:'#3DBE6E',fillColor:'#3DBE6E',fillOpacity:.07}).addTo(map);
+    L.circle([CENTRO.lat,CENTRO.lng],{...co,radius:50000, color:'#7EC850',fillColor:'#7EC850',fillOpacity:.05}).addTo(map);
+    L.circle([CENTRO.lat,CENTRO.lng],{...co,radius:150000,color:'#F5A623',fillColor:'#F5A623',fillOpacity:.03}).addTo(map);
+    L.circle([CENTRO.lat,CENTRO.lng],{...co,radius:300000,color:'#E8774A',fillColor:'#E8774A',fillOpacity:.02}).addTo(map);
+
+    map.on('click', e => {
+      clienteLoc = e.latlng;
+      if (marcador) map.removeLayer(marcador);
+      const ic = L.divIcon({ html:'<div style="background:#FF7D3B;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.3)">📍 Tu ubicación</div>', className:'', iconAnchor:[50,12] });
+      marcador = L.marker([e.latlng.lat, e.latlng.lng], { icon:ic }).addTo(map);
+      if (window._ln) map.removeLayer(window._ln);
+      window._ln = L.polyline([[CENTRO.lat,CENTRO.lng],[e.latlng.lat,e.latlng.lng]], { color:'#FF7D3B',weight:2,dashArray:'8,5' }).addTo(map);
+      calcular();
+      // Actualizar paso 3
+      document.getElementById('paso-ind-2').classList.add('completado');
+      document.getElementById('paso-ind-2').classList.remove('activo');
+      document.getElementById('paso-ind-3').classList.add('activo');
+    });
+  }
+
+  function dist(a,b,c,d) {
+    const R=6371, dL=(c-a)*Math.PI/180, dG=(d-b)*Math.PI/180;
+    const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;
+    return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+  }
+
+  function fmt(n) { return 'S/. '+n.toLocaleString('es-PE',{minimumFractionDigits:2}); }
+
+  function calcular() {
+    if (!clienteLoc) return;
+    const km = dist(CENTRO.lat,CENTRO.lng,clienteLoc.lat,clienteLoc.lng);
+    zona = ZONAS.find(z => km <= z.max);
+
+    const badge = document.getElementById('zona-badge');
+    badge.classList.add('vis');
+    badge.style.borderLeftColor = zona.color;
+    badge.style.background = zona.color+'18';
+    document.getElementById('zona-nombre').textContent = zona.nombre+' — '+zona.desc;
+    document.getElementById('zona-dist').textContent = '📏 Distancia aprox: '+km.toFixed(1)+' km desde Vegueta';
+
+    actualizarRes(km);
+  }
+
+  function actualizarRes(km) {
+    const res = document.getElementById('resultado');
+    const btnWa = document.getElementById('btn-wa');
+    res.classList.add('vis');
+    btnWa.classList.add('vis');
+
+    const cp = PRECIO * qty;
+    document.getElementById('r-prod').textContent = fmt(cp);
+    document.getElementById('r-qty').textContent  = qty+' tonelada'+(qty>1?'s':'');
+    document.getElementById('r-zona-lbl').textContent = zona.nombre;
+    document.getElementById('r-uso').textContent = usoSeleccionado;
+
+    if (zona.flete === null) {
+      document.getElementById('r-flete').textContent = 'Cotización especial';
+      document.getElementById('r-total').textContent = 'Consultar';
+    } else {
+      const cf = zona.flete * qty;
+      document.getElementById('r-flete').textContent = fmt(cf);
+      document.getElementById('r-total').textContent  = fmt(cp + cf);
+    }
+  }
+
+  function cambiarQty(d) {
+    qty = Math.max(1, Math.min(100, qty+d));
+    document.getElementById('qty-num').textContent = qty;
+    if (clienteLoc) calcular();
+  }
+
+  function enviarWA() {
+    if (!zona || !clienteLoc) return;
+    const km = dist(CENTRO.lat,CENTRO.lng,clienteLoc.lat,clienteLoc.lng).toFixed(1);
+    const cp = PRECIO*qty;
+    const cf = zona.flete ? zona.flete*qty : 0;
+    let msg = `Hola Corporación Logística H&R, quiero cotizar cascarilla de arroz.\n\n`;
+    msg += `🎯 *Uso:* ${usoSeleccionado}\n`;
+    msg += `📦 *Cantidad:* ${qty} tonelada${qty>1?'s':''}\n`;
+    msg += `📍 *Zona:* ${zona.nombre} (~${km} km de Vegueta)\n`;
+    msg += `💰 *Producto:* S/. ${cp.toFixed(2)}\n`;
+    if (zona.flete) {
+      msg += `🚛 *Flete:* S/. ${cf.toFixed(2)}\n`;
+      msg += `✅ *Total:* S/. ${(cp+cf).toFixed(2)}\n`;
+    } else {
+      msg += `🚛 *Flete:* Requiere cotización especial (+300 km)\n`;
+    }
+    msg += `\nPor favor confirmame disponibilidad y precio final.`;
+    window.open('https://wa.me/51999999999?text='+encodeURIComponent(msg), '_blank');
+  }
+</script>
+{% endblock %}

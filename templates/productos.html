@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% block title %}Productos{% endblock %}
+{% block extra_css %}
+<style>
+  /* ── FICHA PRINCIPAL ── */
+  .ficha {
+    display: grid; grid-template-columns: 1fr 1.3fr;
+    gap: 3rem; align-items: start;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+  }
+
+  /* Galería de imágenes */
+  .ficha-galeria { position: sticky; top: 80px; }
+  .ficha-img-principal {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover;
+    cursor: zoom-in; display: block;
+    transition: opacity .2s;
+  }
+  .ficha-thumbs {
+    display: flex; gap: 6px; padding: 8px;
+    background: var(--off); border-top: 1px solid var(--border);
+  }
+  .thumb {
+    width: 72px; height: 56px; object-fit: cover;
+    cursor: pointer; border: 2px solid transparent;
+    border-radius: 4px; transition: border-color .2s, opacity .2s;
+    opacity: .7;
+  }
+  .thumb:hover, .thumb.active { border-color: var(--green); opacity: 1; }
+
+  /* Contenido ficha */
+  .ficha-body { padding: 2.2rem 2rem 2.2rem 0; }
+
+  .ficha-badges { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .fbadge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .25rem .7rem; border-radius: 20px;
+  }
+  .fbadge-green { background: var(--green-lt); color: var(--green-dk); border: 1px solid var(--border); }
+  .fbadge-orange { background: rgba(255,125,59,.1); color: var(--orange); border: 1px solid rgba(255,125,59,.3); }
+
+  .ficha-nombre {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 2rem;
+    text-transform: uppercase; color: var(--green-dk);
+    line-height: 1; margin-bottom: .3rem;
+  }
+  .ficha-subtitulo {
+    font-size: .85rem; color: var(--muted);
+    font-weight: 500; margin-bottom: 1.2rem;
+  }
+
+  /* Precio */
+  .precio-block {
+    background: var(--green-lt);
+    border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+    margin-bottom: 1.4rem;
+  }
+  .precio-row { display: flex; align-items: baseline; gap: 1.5rem; flex-wrap: wrap; }
+  .precio-item { display: flex; flex-direction: column; gap: .1rem; }
+  .precio-lbl {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .precio-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 1.7rem; color: var(--green-dk);
+    line-height: 1;
+  }
+  .precio-val small { font-size: .75rem; font-weight: 400; color: var(--muted); }
+  .precio-divider { width: 1px; height: 40px; background: var(--border); }
+  .precio-nota {
+    font-size: .76rem; color: var(--muted);
+    margin-top: .6rem; line-height: 1.5;
+  }
+
+  /* Presentaciones */
+  .presentaciones { margin-bottom: 1.4rem; }
+  .pres-titulo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--green-dk); margin-bottom: .7rem;
+  }
+  .pres-grid { display: flex; gap: .7rem; flex-wrap: wrap; }
+  .pres-card {
+    border: 2px solid var(--border); border-radius: 8px;
+    padding: .8rem 1.2rem; text-align: center;
+    cursor: pointer; background: var(--white);
+    transition: border-color .2s, background .2s;
+    min-width: 110px;
+  }
+  .pres-card:hover, .pres-card.active {
+    border-color: var(--green); background: var(--green-lt);
+  }
+  .pres-icon { font-size: 1.4rem; display: block; margin-bottom: .3rem; }
+  .pres-nombre {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: .85rem;
+    text-transform: uppercase; color: var(--green-dk);
+  }
+  .pres-peso { font-size: .74rem; color: var(--muted); }
+
+  /* Descripción */
+  .ficha-desc {
+    font-size: .93rem; color: var(--ink);
+    line-height: 1.75; margin-bottom: 1.4rem;
+    border-left: 3px solid var(--green);
+    padding-left: 1rem;
+  }
+
+  /* Botones CTA */
+  .ficha-cta { display: flex; gap: .8rem; flex-wrap: wrap; }
+
+
+  /* ── USOS ── */
+  .usos-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1rem; margin-top: 1.5rem;
+  }
+  .uso-item {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 1.4rem;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+  }
+  .uso-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(61,190,110,.1);
+    border-color: var(--green);
+  }
+  .uso-item::before {
+    content: ''; display: block;
+    width: 32px; height: 3px;
+    background: linear-gradient(90deg, var(--green), var(--orange));
+    margin-bottom: .8rem; border-radius: 2px;
+  }
+  .uso-icon { font-size: 1.8rem; margin-bottom: .5rem; display: block; }
+  .uso-nombre {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    text-transform: uppercase; color: var(--green-dk);
+    margin-bottom: .3rem;
+  }
+  .uso-desc { font-size: .84rem; color: var(--muted); line-height: 1.55; }
+
+  /* ── PROCESO ── */
+  .proceso-steps {
+    display: flex; gap: 0;
+    margin-top: 1.5rem; flex-wrap: wrap;
+  }
+  .proceso-step {
+    flex: 1; min-width: 180px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 1.8rem 1.2rem;
+    position: relative;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-right: none; 
+  }
+  .proceso-step:last-child { border-right: 1.5px solid var(--border); border-radius: 0 10px 10px 0; }
+  .proceso-step:first-child { border-radius: 10px 0 0 10px; }
+  .proceso-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 1rem;
+    margin-bottom: .8rem; flex-shrink: 0;
+  }
+  .proceso-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+  .proceso-nombre {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: .92rem;
+    text-transform: uppercase; color: var(--green-dk);
+    margin-bottom: .3rem;
+  }
+  .proceso-desc { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+  .proceso-arrow {
+    position: absolute; right: -14px; top: 50%;
+    transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--orange); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; font-weight: 700; z-index: 2;
+  }
+  .proceso-step:last-child .proceso-arrow { display: none; }
+
+  /* Lightbox */
+  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:1000; align-items:center; justify-content:center; }
+  .lightbox.open { display:flex; }
+  .lightbox img { max-width:90vw; max-height:85vh; border-radius:6px; }
+  .lb-close { position:absolute; top:1.5rem; right:1.5rem; color:#fff; font-size:2rem; cursor:pointer; background:none; border:none; }
+
+  @media(max-width:900px){
+    .ficha { grid-template-columns: 1fr; }
+    .ficha-body { padding: 1.5rem; }
+    .ficha-galeria { position: static; }
+    .tecnica-grid { grid-template-columns: 1fr; }
+    .usos-grid { grid-template-columns: 1fr 1fr; }
+    .proceso-steps { flex-direction: column; }
+    .proceso-step { border-right: 1.5px solid var(--border) !important; border-bottom: none; border-radius: 0 !important; }
+    .proceso-step:first-child { border-radius: 10px 10px 0 0 !important; }
+    .proceso-step:last-child { border-radius: 0 0 10px 10px !important; border-bottom: 1.5px solid var(--border) !important; }
+    .proceso-arrow { display: none !important; }
+  }
+  @media(max-width:600px){
+    .usos-grid { grid-template-columns: 1fr; }
+    .pres-grid { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Nuestro <span>Producto</span></h1>
+  <div class="breadcrumb"><a href="{{ url_for('inicio') }}">Inicio</a> › Productos</div>
+</div>
+
+<div class="section">
+
+ <!-- ══ FICHA PRINCIPAL ══ -->
+  <div class="ficha">
+    <!-- Galería -->
+    <div class="ficha-galeria">
+      <img class="ficha-img-principal" id="img-principal"
+           src="/static/images/saco.webp" alt="Cascarilla de arroz"
+           onclick="abrirLB(this.src)" />
+      <div class="ficha-thumbs">
+        <img class="thumb active" src="/static/images/saco.webp"    onclick="cambiarImg(this)" alt="Saco" />
+        <img class="thumb"        src="/static/images/cama.PNG"     onclick="cambiarImg(this)" alt="Cama" />
+        <img class="thumb"        src="/static/images/arandano.PNG" onclick="cambiarImg(this)" alt="Arándano" />
+        <img class="thumb"        src="/static/images/nido.PNG"     onclick="cambiarImg(this)" alt="Nido" />
+        <img class="thumb"        src="/static/images/proceso.webp" onclick="cambiarImg(this)" alt="Proceso" />
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="ficha-body">
+      <div class="ficha-badges">
+        <span class="fbadge fbadge-green">✅ Disponible en stock</span>
+        <span class="fbadge fbadge-green">🌿 100% Natural</span>
+        <span class="fbadge fbadge-orange">🔬 Desinfectado</span>
+        <span class="fbadge fbadge-green">🏭 Prensado industrial</span>
+      </div>
+
+      <div class="ficha-nombre">Cascarilla de Arroz</div>
+      <div class="ficha-subtitulo">Subproducto del pilado · Origen: Chiclayo, Lambayeque · SKU: CAR-001</div>
+
+      <!-- Precio -->
+      <div class="precio-block">
+        <div class="precio-row">
+          <div class="precio-item">
+            <span class="precio-lbl">Por tonelada</span>
+            <span class="precio-val">S/. 350 <small>/ ton</small></span>
+          </div>
+          <div class="precio-divider"></div>
+          <div class="precio-item">
+            <span class="precio-lbl">Por saco</span>
+            <span class="precio-val">S/. 10 <small>– S/. 12</small></span>
+          </div>
+          <div class="precio-divider"></div>
+          <div class="precio-item">
+            <span class="precio-lbl">Flete desde</span>
+            <span class="precio-val">S/. 100 <small>/ ton</small></span>
+          </div>
+        </div>
+        <div class="precio-nota">* Flete varía según distancia desde Vegueta, Huacho. <a href="{{ url_for('cotizacion') }}" style="color:var(--green);font-weight:600;">Calcula tu precio exacto →</a></div>
+      </div>
+
+      <!-- Presentaciones -->
+      <div class="presentaciones">
+        <div class="pres-titulo">Presentaciones disponibles</div>
+        <div class="pres-grid">
+          <div class="pres-card active" onclick="selPres(this)">
+            <span class="pres-icon">🛍️</span>
+            <div class="pres-nombre">Saco</div>
+            <div class="pres-peso">25 – 30 kg aprox.</div>
+          </div>
+          <div class="pres-card" onclick="selPres(this)">
+            <span class="pres-icon">🏗️</span>
+            <div class="pres-nombre">Tonelada</div>
+            <div class="pres-peso">1,000 kg · Granel</div>
+          </div>
+          <div class="pres-card" onclick="selPres(this)">
+            <span class="pres-icon">🚛</span>
+            <div class="pres-nombre">Carga completa</div>
+            <div class="pres-peso">Según capacidad</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="ficha-desc">
+        Cascarilla de arroz obtenida del proceso de pilado, sometida a <strong>desinfección</strong> y <strong>prensado industrial</strong> antes de ser comercializada. Rica en sílice amorfo, celulosa y lignina. Producto fresco, limpio y con baja humedad, directamente de los molinos arroceros de Chiclayo.
+      </div>
+
+      <!-- CTA -->
+      <div class="ficha-cta">
+        <a href="{{ url_for('cotizacion') }}" class="btn btn-primary">📍 Cotizar con mapa</a>
+        <a href="https://wa.me/51999999999?text=Hola%2C%20quiero%20cotizar%20cascarilla%20de%20arroz" target="_blank" class="btn btn-orange">💬 WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROCESO ══ -->
+  <div class="tecnica-section">
+    <div class="section-title">Proceso de <span>Producción</span></div>
+    <div class="section-line"></div>
+    <p class="section-intro">Cada saco pasa por un proceso controlado antes de llegar a tu granja o cultivo.</p>
+
+    <div class="proceso-steps">
+      <div class="proceso-step">
+        <div class="proceso-num">1</div>
+        <div class="proceso-icon">🌾</div>
+        <div class="proceso-nombre">Origen</div>
+        <div class="proceso-desc">Recolección en molinos arroceros de Chiclayo, Lambayeque</div>
+        <div class="proceso-arrow">›</div>
+      </div>
+      <div class="proceso-step">
+        <div class="proceso-num">2</div>
+        <div class="proceso-icon">🔬</div>
+        <div class="proceso-nombre">Desinfección</div>
+        <div class="proceso-desc">Proceso de desinfección industrial para eliminar hongos y patógenos</div>
+        <div class="proceso-arrow">›</div>
+      </div>
+      <div class="proceso-step">
+        <div class="proceso-num">3</div>
+        <div class="proceso-icon">🏭</div>
+        <div class="proceso-nombre">Prensado</div>
+        <div class="proceso-desc">Prensado industrial para optimizar volumen y facilitar transporte</div>
+        <div class="proceso-arrow">›</div>
+      </div>
+      <div class="proceso-step">
+        <div class="proceso-num">4</div>
+        <div class="proceso-icon">🛍️</div>
+        <div class="proceso-nombre">Ensacado</div>
+        <div class="proceso-desc">Embolsado en sacos de 25–30 kg o despacho a granel por toneladas</div>
+        <div class="proceso-arrow">›</div>
+      </div>
+      <div class="proceso-step">
+        <div class="proceso-num">5</div>
+        <div class="proceso-icon">🚛</div>
+        <div class="proceso-nombre">Distribución</div>
+        <div class="proceso-desc">Despacho desde Vegueta, Huacho hacia norte y sur del país</div>
+        <div class="proceso-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ USOS ══ -->
+  <div class="tecnica-section">
+    <div class="section-title">Aplicaciones del <span>Producto</span></div>
+    <div class="section-line"></div>
+
+    <div class="usos-grid">
+      <div class="uso-item">
+        <span class="uso-icon">🐔</span>
+        <div class="uso-nombre">Cama para Pollos / Aves</div>
+        <div class="uso-desc">Aislante térmico y absorbente en galpones avícolas. Reduce humedad y previene hongos.</div>
+      </div>
+      <div class="uso-item">
+        <span class="uso-icon">🐷</span>
+        <div class="uso-nombre">Cama para Cerdos</div>
+        <div class="uso-desc">Absorbe efluentes y reduce el estrés porcino. Se convierte en compost tras su uso.</div>
+      </div>
+      <div class="uso-item">
+        <span class="uso-icon">🥚</span>
+        <div class="uso-nombre">Nidos de Gallinas</div>
+        <div class="uso-desc">Colchón natural para nidales. Protege los huevos y mantiene el nidal seco.</div>
+      </div>
+      <div class="uso-item">
+        <span class="uso-icon">🫐</span>
+        <div class="uso-nombre">Sustrato para Arándano</div>
+        <div class="uso-desc">Mejora drenaje y aireación. Ideal para berries en la costa peruana.</div>
+      </div>
+      <div class="uso-item">
+        <span class="uso-icon">🌱</span>
+        <div class="uso-nombre">Hidroponía</div>
+        <div class="uso-desc">Sustrato mixto para tomate, pimiento y cultivos en invernadero.</div>
+      </div>
+      <div class="uso-item">
+        <span class="uso-icon">🔥</span>
+        <div class="uso-nombre">Biomasa Energética</div>
+        <div class="uso-desc">Alto poder calorífico para calderas. Alternativa renovable al carbón mineral.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA FINAL -->
+  <div style="background:linear-gradient(135deg,var(--green-dk),var(--green));border-radius:14px;padding:2.5rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.6rem;text-transform:uppercase;color:#fff;line-height:1;">¿Listo para cotizar?</div>
+      <div style="color:rgba(255,255,255,.8);font-size:.92rem;margin-top:.3rem;">Usa nuestro cotizador con mapa y obtén tu precio en segundos.</div>
+    </div>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
+      <a href="{{ url_for('cotizacion') }}" class="btn btn-orange">📍 Cotizar ahora</a>
+      <a href="https://wa.me/51999999999?text=Hola%2C%20quiero%20cotizar%20cascarilla%20de%20arroz" target="_blank" style="background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.5);" class="btn">💬 WhatsApp</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="cerrarLB()">
+  <button class="lb-close">✕</button>
+  <img id="lb-img" src="" alt="" />
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function cambiarImg(thumb) {
+    document.getElementById('img-principal').src = thumb.src;
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+  }
+  function selPres(card) {
+    document.querySelectorAll('.pres-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  }
+  function abrirLB(src) {
+    document.getElementById('lb-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  function cerrarLB() {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+  document.addEventListener('keydown', e => { if(e.key==='Escape') cerrarLB(); });
+</script>
+{% endblock %}

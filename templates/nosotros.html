@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Nosotros{% endblock %}
+{% block extra_css %}
+<style>
+  .nosotros-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+  .nosotros-img { width: 100%; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+  .mv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+  .mv-card { background: var(--green-lt); border-left: 4px solid var(--green); border-radius: 0 8px 8px 0; padding: 1.4rem; }
+  .mv-card h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.1rem; text-transform: uppercase; color: var(--green-dk); margin-bottom: .6rem; }
+  .mv-card p { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+  .valores-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+  .valor-item { text-align: center; padding: 1.5rem 1rem; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; transition: border-color .2s, box-shadow .2s; }
+  .valor-item:hover { border-color: var(--green); box-shadow: 0 6px 20px rgba(61,190,110,.1); }
+  .valor-icon { font-size: 2rem; margin-bottom: .6rem; display: block; }
+  .valor-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; text-transform: uppercase; color: var(--green-dk); }
+  @media(max-width:900px){ .nosotros-layout { grid-template-columns: 1fr; } .mv-grid { grid-template-columns: 1fr; } .valores-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Nuestra <span>Empresa</span></h1>
+  <div class="breadcrumb"><a href="{{ url_for('inicio') }}">Inicio</a> › Nosotros</div>
+</div>
+
+<div class="section">
+  <div class="nosotros-layout">
+    <div>
+      <img class="nosotros-img" src="https://images.unsplash.com/photo-1560493676-04071185765b?w=800&q=80" alt="Corporación logistica H&R" />
+    </div>
+    <div>
+      <div class="section-title">Corporación logistica <span>H&R</span></div>
+      <div class="section-line"></div>
+      <p style="font-size:.97rem;line-height:1.75;color:var(--ink);margin-bottom:1rem;">
+        Somos una empresa peruana dedicada a la <strong>distribución y comercialización de cascarilla de arroz</strong> para uso agropecuario e industrial. Nuestro producto proviene directamente de los molinos arroceros de <strong>Chiclayo, Lambayeque</strong>, garantizando calidad desde el origen.
+      </p>
+      <p style="font-size:.97rem;line-height:1.75;color:var(--ink);margin-bottom:1rem;">
+        Con sede operativa en <strong>Vegueta, Km 168 — Huacho</strong>, nos posicionamos estratégicamente en el centro de la costa peruana para atender clientes tanto al norte como al sur del país, optimizando costos de flete para nuestros clientes.
+      </p>
+      <p style="font-size:.97rem;line-height:1.75;color:var(--ink);">
+        Creemos en la <strong>economía circular</strong>: transformar un subproducto del arroz en un recurso productivo de alto valor para la ganadería, avicultura y agricultura es nuestra forma de contribuir al medio ambiente.
+      </p>
+      <div style="margin-top:1.5rem;padding:1.2rem 1.4rem;background:var(--green-lt);border-radius:8px;font-size:.88rem;color:var(--muted);">
+        📍 <strong style="color:var(--green-dk);">Vegueta, Km 168 · Huacho, Lima</strong><br>
+        📞 <strong>+51 999 999 999</strong> &nbsp;|&nbsp; ✉️ ventas@corporacionlogisticaH&R.com
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-alt">
+  <div class="section-title">Misión & <span>Visión</span></div>
+  <div class="section-line"></div>
+  <div class="mv-grid">
+    <div class="mv-card">
+      <h3>🎯 Misión</h3>
+      <p>Proveer cascarilla de arroz de calidad a empresas agropecuarias e industriales del Perú, con precios competitivos, distribución eficiente desde Huacho y un compromiso real con la sostenibilidad ambiental y el bienestar de nuestros clientes.</p>
+    </div>
+    <div class="mv-card">
+      <h3>🔭 Visión</h3>
+      <p>Ser la empresa líder en distribución de cascarilla de arroz en la costa central del Perú, reconocida por su cadena de suministro confiable, su enfoque en economía circular y su capacidad de atender a clientes de norte a sur del país.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Nuestros <span>Valores</span></div>
+  <div class="section-line"></div>
+  <div class="valores-grid">
+    <div class="valor-item"><span class="valor-icon">🌿</span><div class="valor-title">Responsabilidad Ambiental</div></div>
+    <div class="valor-item"><span class="valor-icon">🤝</span><div class="valor-title">Compromiso con el cliente</div></div>
+    <div class="valor-item"><span class="valor-icon">✅</span><div class="valor-title">Calidad garantizada</div></div>
+    <div class="valor-item"><span class="valor-icon">🚛</span><div class="valor-title">Distribución eficiente</div></div>
+    <div class="valor-item"><span class="valor-icon">♻️</span><div class="valor-title">Economía circular</div></div>
+    <div class="valor-item"><span class="valor-icon">📊</span><div class="valor-title">Transparencia</div></div>
+  </div>
+</div>
+{% endblock %}
